@@ -50,10 +50,14 @@ type PullRequest struct {
 	Title  string `json:"title,omitempty"`
 }
 
+type Commit struct {
+	ID string `json:"id"`
+}
+
 type Hook struct {
 	PullRequest *PullRequest `json:"request,omitempty"`
-	Base        string       `json:"base"`
-	Head        string       `json:"head"`
+	Base        Commit       `json:"base"`
+	Head        Commit       `json:"head"`
 }
 
 func main() {
@@ -77,7 +81,10 @@ func main() {
 	base := strings.Join(strings.Split(filepath.Join(*opts.hub, *opts.base), "/"), ":")
 	head := strings.Join(strings.Split(filepath.Join(*opts.hub, *opts.head), "/"), ":")
 
-	hook := Hook{Base: base, Head: head}
+	hook := Hook{
+		Base: Commit{ID: base},
+		Head: Commit{ID: head},
+	}
 	if *opts.number != "" && *opts.title != "" {
 		hook.PullRequest = &PullRequest{
 			Number: *opts.number,
