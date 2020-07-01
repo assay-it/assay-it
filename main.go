@@ -122,7 +122,7 @@ func ioWebHook(api string, req Hook, token *string) gurl.Arrow {
 	var hook []byte
 
 	return gurl.HTTP(
-		ø.POST("https://%s/webhook/webhook", api),
+		ø.POST("https://%s/webhook/commit", api),
 		ø.Authorization().Val(token),
 		ø.ContentJSON(),
 		ø.Send(req),
