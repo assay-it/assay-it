@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/fogfish/gurl"
@@ -16,11 +17,11 @@ import (
 
 type tOpts struct {
 	secret *string
-	source *string
-	branch *string
-	commit *string
+	head   *string
+	base   *string
 	title  *string
 	number *string
+	hub    *string
 	api    *string
 }
 
@@ -28,11 +29,11 @@ var opts *tOpts = &tOpts{}
 
 func (opts *tOpts) parse() {
 	opts.secret = flag.String("secret", "", "secret token for progammable access")
-	opts.source = flag.String("source", "", "name of source code repository for assay suites (e.g. assay-it/example.assay.it).")
-	opts.branch = flag.String("branch", "", "name of the branch with assay suites.")
-	opts.commit = flag.String("commit", "", "long identity of commit.")
+	opts.head = flag.String("head", "", "head of pull request such as owner/repo/branch/commit.")
+	opts.base = flag.String("base", "", "base of pull request such as owner/repo/branch/commit.")
 	opts.title = flag.String("title", "", "short description about the change (e.g. pull request title).")
 	opts.number = flag.String("number", "", "pull request number.")
+	opts.hub = flag.String("hub", "github", "hub service")
 	opts.api = flag.String("api", "api.assay.it", "rest api endpoint.")
 	flag.Parse()
 }
@@ -50,8 +51,9 @@ type PullRequest struct {
 }
 
 type Hook struct {
-	ID          string       `json:"id"`
 	PullRequest *PullRequest `json:"request,omitempty"`
+	Base        string       `json:"base"`
+	Head        string       `json:"head"`
 }
 
 func main() {
@@ -64,36 +66,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *opts.source == "" {
-		fmt.Fprintf(os.Stderr, "Undefined source code repository.\n")
-		os.Exit(1)
-	}
-
-	if *opts.branch != "" && *opts.commit == "" {
-		fmt.Fprintf(os.Stderr, "Undefined commit.\n")
-		os.Exit(1)
-	}
-
-	if *opts.branch == "" && *opts.commit != "" {
-		fmt.Fprintf(os.Stderr, "Undefined branch.\n")
+	if *opts.base == "" || *opts.head == "" {
+		fmt.Fprintf(os.Stderr, "No reference to changes.\n")
 		os.Exit(1)
 	}
 
 	//
 	var token string
 
-	category := "webhook"
-	target := strings.Join(
-		append([]string{"github"}, strings.Split(*opts.source, "/")...),
-		":",
-	)
+	base := strings.Join(strings.Split(filepath.Join(*opts.hub, *opts.base), "/"), ":")
+	head := strings.Join(strings.Split(filepath.Join(*opts.hub, *opts.head), "/"), ":")
 
-	if *opts.branch != "" && *opts.commit != "" {
-		category = "commit"
-		target = fmt.Sprintf("%s:%s:%s", target, *opts.branch, *opts.commit)
-	}
-
-	hook := Hook{ID: target}
+	hook := Hook{Base: base, Head: head}
 	if *opts.number != "" && *opts.title != "" {
 		hook.PullRequest = &PullRequest{
 			Number: *opts.number,
@@ -103,7 +87,7 @@ func main() {
 
 	err := gurl.Join(
 		ioAccessToken(*opts.api, *opts.secret, &token),
-		ioWebHook(*opts.api, category, hook, &token),
+		ioWebHook(*opts.api, hook, &token),
 	)(gurl.IO()).Fail
 
 	if err != nil {
@@ -134,15 +118,15 @@ func ioAccessToken(api, digest string, token *string) gurl.Arrow {
 	)
 }
 
-func ioWebHook(api, cat string, req Hook, token *string) gurl.Arrow {
+func ioWebHook(api string, req Hook, token *string) gurl.Arrow {
 	var hook []byte
 
 	return gurl.HTTP(
-		ø.POST("https://%s/webhook/%s", api, cat),
+		ø.POST("https://%s/webhook/webhook", api),
 		ø.Authorization().Val(token),
 		ø.ContentJSON(),
 		ø.Send(req),
-		ƒ.Code(200, 401),
+		ƒ.Code(200),
 		ƒ.Bytes(&hook),
 		ƒ.FMap(func() error {
 			var pretty bytes.Buffer
