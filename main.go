@@ -116,7 +116,7 @@ func ioAccessToken(api, digest string, token *string) gurl.Arrow {
 		ø.Authorization().Is("Basic "+digest),
 		ø.ContentForm(),
 		ø.Send(req),
-		ƒ.Code(200),
+		ƒ.Code(gurl.StatusCodeOK),
 		ƒ.Recv(&rsp),
 		ƒ.FMap(func() error {
 			*token = "Bearer " + rsp.Token
@@ -133,7 +133,7 @@ func ioWebHook(api string, req Hook, token *string) gurl.Arrow {
 		ø.Authorization().Val(token),
 		ø.ContentJSON(),
 		ø.Send(req),
-		ƒ.Code(200),
+		ƒ.Code(gurl.StatusCodeOK),
 		ƒ.Bytes(&hook),
 		ƒ.FMap(func() error {
 			var pretty bytes.Buffer
@@ -145,3 +145,4 @@ func ioWebHook(api string, req Hook, token *string) gurl.Arrow {
 		}),
 	)
 }
+
