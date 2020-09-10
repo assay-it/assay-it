@@ -60,6 +60,7 @@ func webhook(cmd *cobra.Command, args []string) error {
 	hook := api.Hook{
 		Base: api.Commit{ID: base},
 		Head: api.Commit{ID: head},
+		URL:  target,
 	}
 	if number != "" && title != "" {
 		hook.PullRequest = &api.PullRequest{
