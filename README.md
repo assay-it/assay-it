@@ -10,7 +10,7 @@ The tool facilitates assay.it integration with CI/CD solutions, construction of 
 
 2. Generate personal access key at your Profile settings.
 
-3. Install the cli 
+3. Install the cli `go get github.com/assay-it/assay`
 
 ## License
 
