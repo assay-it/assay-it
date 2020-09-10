@@ -9,7 +9,6 @@
 package cmd
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -68,8 +67,6 @@ func webhook(cmd *cobra.Command, args []string) error {
 			Title:  title,
 		}
 	}
-
-	fmt.Println("==> ", hook)
 
 	c := api.New(endpoint)
 	return eval(
