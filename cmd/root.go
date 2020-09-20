@@ -14,7 +14,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/fogfish/gurl"
+	"github.com/assay-it/sdk-go/assay"
+	"github.com/assay-it/sdk-go/http"
 	"github.com/spf13/cobra"
 )
 
@@ -62,12 +63,12 @@ func requiredFlagKey(cmd *cobra.Command, args []string) error {
 
 //
 // eval executed side-effect on http computation
-func eval(f gurl.Arrow) error {
-	deb := gurl.Verbose(0)
+func eval(f assay.Arrow) error {
+	deb := assay.LogLevelNone
 	if debug {
-		deb = gurl.Verbose(4)
+		deb = assay.LogLevelDebug
 	}
 
-	io := gurl.IO(deb)
+	io := http.DefaultIO(assay.Logging(deb))
 	return f(io).Fail
 }

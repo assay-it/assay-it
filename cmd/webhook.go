@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/assay-it/assay/api"
-	"github.com/fogfish/gurl"
+	"github.com/assay-it/sdk-go/assay"
 	"github.com/spf13/cobra"
 )
 
@@ -71,7 +71,7 @@ func webhook(cmd *cobra.Command, args []string) error {
 
 	c := api.New(endpoint)
 	return eval(
-		gurl.Join(
+		assay.Join(
 			c.SignIn(digest),
 			c.WebHook(hook),
 		),

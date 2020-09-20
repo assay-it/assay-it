@@ -9,9 +9,11 @@
 package api
 
 import (
-	"github.com/fogfish/gurl"
-	ƒ "github.com/fogfish/gurl/http/recv"
-	ø "github.com/fogfish/gurl/http/send"
+	"github.com/assay-it/sdk-go/assay"
+	ç "github.com/assay-it/sdk-go/cats"
+	"github.com/assay-it/sdk-go/http"
+	ƒ "github.com/assay-it/sdk-go/http/recv"
+	ø "github.com/assay-it/sdk-go/http/send"
 )
 
 type tOAuthFlow struct {
@@ -23,17 +25,18 @@ type tAccessToken struct {
 }
 
 //
-func (c *Client) SignIn(digest string) gurl.Arrow {
+func (c *Client) SignIn(digest string) assay.Arrow {
 	var token tAccessToken
 
-	return gurl.HTTP(
+	return http.Join(
 		ø.POST("https://%s/auth/token", c.api),
 		ø.Authorization().Is("Basic "+digest),
 		ø.ContentForm(),
 		ø.Send(tOAuthFlow{Type: "client_credentials"}),
-		ƒ.Code(gurl.StatusCodeOK),
+		ƒ.Code(http.StatusCodeOK),
 		ƒ.Recv(&token),
-		ƒ.FMap(func() error {
+	).Then(
+		ç.FMap(func() error {
 			c.token = "Bearer " + token.Token
 			return nil
 		}),

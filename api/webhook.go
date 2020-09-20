@@ -13,16 +13,18 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/fogfish/gurl"
-	ƒ "github.com/fogfish/gurl/http/recv"
-	ø "github.com/fogfish/gurl/http/send"
+	"github.com/assay-it/sdk-go/assay"
+	ç "github.com/assay-it/sdk-go/cats"
+	"github.com/assay-it/sdk-go/http"
+	ƒ "github.com/assay-it/sdk-go/http/recv"
+	ø "github.com/assay-it/sdk-go/http/send"
 )
 
 //
-func (c *Client) WebHookSourceCode(sourcecode, target string) gurl.Arrow {
+func (c *Client) WebHookSourceCode(sourcecode, target string) assay.Arrow {
 	var hook []byte
 
-	return gurl.HTTP(
+	return http.Join(
 		ø.POST("https://%s/webhook/sourcecode", c.api),
 		ø.Authorization().Val(&c.token),
 		ø.ContentJSON(),
@@ -30,9 +32,10 @@ func (c *Client) WebHookSourceCode(sourcecode, target string) gurl.Arrow {
 			ID:  sourcecode,
 			URL: target,
 		}),
-		ƒ.Code(gurl.StatusCodeOK),
+		ƒ.Code(http.StatusCodeOK),
 		ƒ.Bytes(&hook),
-		ƒ.FMap(func() error {
+	).Then(
+		ç.FMap(func() error {
 			var pretty bytes.Buffer
 			if err := json.Indent(&pretty, hook, "", "  "); err != nil {
 				return err
@@ -44,17 +47,18 @@ func (c *Client) WebHookSourceCode(sourcecode, target string) gurl.Arrow {
 }
 
 //
-func (c *Client) WebHook(req Hook) gurl.Arrow {
+func (c *Client) WebHook(req Hook) assay.Arrow {
 	var hook []byte
 
-	return gurl.HTTP(
+	return http.Join(
 		ø.POST("https://%s/webhook/commit", c.api),
 		ø.Authorization().Val(&c.token),
 		ø.ContentJSON(),
 		ø.Send(req),
-		ƒ.Code(gurl.StatusCodeOK),
+		ƒ.Code(http.StatusCodeOK),
 		ƒ.Bytes(&hook),
-		ƒ.FMap(func() error {
+	).Then(
+		ç.FMap(func() error {
 			var pretty bytes.Buffer
 			if err := json.Indent(&pretty, hook, "", "  "); err != nil {
 				return err
