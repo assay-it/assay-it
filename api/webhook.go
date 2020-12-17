@@ -20,34 +20,35 @@ import (
 	ø "github.com/assay-it/sdk-go/http/send"
 )
 
+func stdout(hook *[]byte) assay.Arrow {
+	return ç.FMap(func() error {
+		var pretty bytes.Buffer
+		if err := json.Indent(&pretty, *hook, "", "  "); err != nil {
+			return err
+		}
+		fmt.Println(pretty.String())
+		return nil
+	})
+}
+
 //
-func (c *Client) WebHookSourceCode(sourcecode, target string) assay.Arrow {
+func (c *Client) WebHookSource(req SourceCodeID) assay.Arrow {
 	var hook []byte
 
 	return http.Join(
 		ø.POST("https://%s/webhook/sourcecode", c.api),
 		ø.Authorization().Val(&c.token),
 		ø.ContentJSON(),
-		ø.Send(SourceCodeID{
-			ID:  sourcecode,
-			URL: target,
-		}),
+		ø.Send(req),
 		ƒ.Code(http.StatusCodeOK),
 		ƒ.Bytes(&hook),
 	).Then(
-		ç.FMap(func() error {
-			var pretty bytes.Buffer
-			if err := json.Indent(&pretty, hook, "", "  "); err != nil {
-				return err
-			}
-			fmt.Println(pretty.String())
-			return nil
-		}),
+		stdout(&hook),
 	)
 }
 
 //
-func (c *Client) WebHook(req Hook) assay.Arrow {
+func (c *Client) WebHookCommit(req SourceCodeID) assay.Arrow {
 	var hook []byte
 
 	return http.Join(
@@ -58,13 +59,22 @@ func (c *Client) WebHook(req Hook) assay.Arrow {
 		ƒ.Code(http.StatusCodeOK),
 		ƒ.Bytes(&hook),
 	).Then(
-		ç.FMap(func() error {
-			var pretty bytes.Buffer
-			if err := json.Indent(&pretty, hook, "", "  "); err != nil {
-				return err
-			}
-			fmt.Println(pretty.String())
-			return nil
-		}),
+		stdout(&hook),
+	)
+}
+
+//
+func (c *Client) WebHook(req Hook) assay.Arrow {
+	var hook []byte
+
+	return http.Join(
+		ø.POST("https://%s/webhook/branch", c.api),
+		ø.Authorization().Val(&c.token),
+		ø.ContentJSON(),
+		ø.Send(req),
+		ƒ.Code(http.StatusCodeOK),
+		ƒ.Bytes(&hook),
+	).Then(
+		stdout(&hook),
 	)
 }
