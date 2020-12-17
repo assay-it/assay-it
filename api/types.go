@@ -15,15 +15,16 @@ type Client struct {
 }
 
 //
-type SourceCodeID struct {
-	ID  string `json:"id"`
-	URL string `json:"endpoint,omitempty"`
-}
-
-//
 type PullRequest struct {
 	Number string `json:"number,omitempty"`
 	Title  string `json:"title,omitempty"`
+}
+
+//
+type SourceCodeID struct {
+	ID          string       `json:"id"`
+	PullRequest *PullRequest `json:"request,omitempty"`
+	URL         string       `json:"endpoint,omitempty"`
 }
 
 //

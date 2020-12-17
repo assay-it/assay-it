@@ -9,7 +9,7 @@
 package cmd
 
 import (
-	"path/filepath"
+	"fmt"
 	"strings"
 
 	"github.com/assay-it/assay/api"
@@ -25,18 +25,26 @@ var (
 )
 
 func init() {
+	//
 	rootCmd.AddCommand(webhookCmd)
+	webhookCmd.PersistentFlags().StringVar(&title, "title", "", "human readable description of the change")
+	webhookCmd.PersistentFlags().StringVar(&number, "number", "", "unique reference number of the change (e.g. pull request)")
+	webhookCmd.PersistentFlags().StringVar(&target, "url", "", "explicitly define target url to run quality check agains the deployment.")
 
-	webhookCmd.Flags().StringVar(&head, "head", "", "head reference of the change using the format :owner/:repo/:branch/:commit")
-	webhookCmd.MarkFlagRequired("head")
+	//
+	webhookCmd.AddCommand(webhookSourceCmd)
 
-	webhookCmd.Flags().StringVar(&base, "base", "", "base reference of the change using the format :owner/:repo/:branch/:commit")
-	webhookCmd.MarkFlagRequired("base")
+	//
+	webhookCmd.AddCommand(webhookCommitCmd)
 
-	webhookCmd.Flags().StringVar(&title, "title", "", "human readable description of the change")
-	webhookCmd.Flags().StringVar(&number, "number", "", "unique reference number of the change (e.g. pull request)")
+	//
+	webhookCmd.AddCommand(webhookBranchCmd)
 
-	webhookCmd.Flags().StringVar(&target, "url", "", "explicitly define target url to run quality check agains the deployment.")
+	webhookBranchCmd.Flags().StringVar(&head, "head", "", "head reference of the change using the format :owner/:repo/:branch/:commit")
+	webhookBranchCmd.MarkFlagRequired("head")
+
+	webhookBranchCmd.Flags().StringVar(&base, "base", "", "base reference of the change using the format :owner/:repo/:branch/:commit")
+	webhookBranchCmd.MarkFlagRequired("base")
 }
 
 var webhookCmd = &cobra.Command{
@@ -45,7 +53,9 @@ var webhookCmd = &cobra.Command{
 	Long: `the command triggers quality assurance at assay.it using webhook api,
 the command faciliatets CI/CD integration use-cases.`,
 	Example: `
-assay webhook --base facebadge/sample.assay.it/master/8c7ec...dc59 --head faceb.../master/8c7ec...dc59
+assay webhook source facebadge/sample.assay.it
+assay webhook commit facebadge/sample.assay.it/master/8c7ec...dc59
+assay webhook branch --base facebadge/sample.assay.it/master/8c7ec...dc59 --head faceb.../master/8c7ec...dc59
 	`,
 	SilenceUsage: true,
 	PreRunE:      requiredFlagKey,
@@ -54,26 +64,133 @@ assay webhook --base facebadge/sample.assay.it/master/8c7ec...dc59 --head faceb.
 }
 
 func webhook(cmd *cobra.Command, args []string) error {
-	base = strings.Join(strings.Split(filepath.Join("github", base), "/"), ":")
-	head = strings.Join(strings.Split(filepath.Join("github", head), "/"), ":")
+	return fmt.Errorf("unable to run webhook")
+}
 
-	hook := api.Hook{
-		Base: api.Commit{ID: base},
-		Head: api.Commit{ID: head},
-		URL:  target,
-	}
-	if number != "" && title != "" {
-		hook.PullRequest = &api.PullRequest{
-			Number: number,
-			Title:  title,
-		}
+//
+//
+var webhookSourceCmd = &cobra.Command{
+	Use:   "source",
+	Short: "run quality job for latest commit of source code repository",
+	Long: `
+the command triggers quality assurance at assay.it using webhook api,
+it schedule quality job for latest commit of source code repository.`,
+	Example: `
+assay webhook source facebadge/sample.assay.it
+	`,
+	SilenceUsage: true,
+	PreRunE:      requiredFlagKey,
+	Args:         cobra.ExactArgs(1),
+	RunE:         webhookSource,
+}
+
+func webhookSource(cmd *cobra.Command, args []string) error {
+	sc := strings.Split(args[0], "/")
+	if len(sc) != 2 {
+		return fmt.Errorf("invalid source code identity: %s", args[0])
 	}
 
 	c := api.New(endpoint)
 	return eval(
 		assay.Join(
 			c.SignIn(digest),
-			c.WebHook(hook),
+			c.WebHookSource(
+				api.SourceCodeID{
+					ID:          fmt.Sprintf("[github:%s/%s]", sc[0], sc[1]),
+					URL:         target,
+					PullRequest: mkPullRequest(),
+				},
+			),
 		),
 	)
+}
+
+//
+//
+var webhookCommitCmd = &cobra.Command{
+	Use:   "commit",
+	Short: "run quality job for specific commit of source code repository",
+	Long: `
+the command triggers quality assurance at assay.it using webhook api,
+it schedule quality job for specific commit of source code repository.`,
+	Example: `
+assay webhook commit facebadge/sample.assay.it/master/8c7ec...dc59
+	`,
+	SilenceUsage: true,
+	PreRunE:      requiredFlagKey,
+	Args:         cobra.ExactArgs(1),
+	RunE:         webhookCommit,
+}
+
+func webhookCommit(cmd *cobra.Command, args []string) error {
+	sc := strings.Split(args[0], "/")
+	if len(sc) != 4 {
+		return fmt.Errorf("invalid commit identity: %s", args[0])
+	}
+
+	c := api.New(endpoint)
+	return eval(
+		assay.Join(
+			c.SignIn(digest),
+			c.WebHookCommit(
+				api.SourceCodeID{
+					ID:          fmt.Sprintf("[github:%s/%s/%s/%s]", sc[0], sc[1], sc[2], sc[3]),
+					URL:         target,
+					PullRequest: mkPullRequest(),
+				},
+			),
+		),
+	)
+}
+
+var webhookBranchCmd = &cobra.Command{
+	Use:   "branch",
+	Short: "run quality job for specific change (pull request) of source code repository",
+	Long: `the command triggers quality assurance at assay.it using webhook api,
+the command faciliatets CI/CD integration use-cases.`,
+	Example: `
+assay webhook branch --base facebadge/sample.assay.it/master/8c7ec...dc59 --head faceb.../master/8c7ec...dc59
+	`,
+	SilenceUsage: true,
+	PreRunE:      requiredFlagKey,
+	Args:         cobra.NoArgs,
+	RunE:         webhookBranch,
+}
+
+func webhookBranch(cmd *cobra.Command, args []string) error {
+	chead := strings.Split(head, "/")
+	cbase := strings.Split(base, "/")
+
+	if len(chead) != 4 {
+		return fmt.Errorf("invalid head identity: %s", head)
+	}
+
+	if len(cbase) != 4 {
+		return fmt.Errorf("invalid base identity: %s", base)
+	}
+
+	c := api.New(endpoint)
+	return eval(
+		assay.Join(
+			c.SignIn(digest),
+			c.WebHook(
+				api.Hook{
+					Base:        api.Commit{ID: fmt.Sprintf("[github:%s/%s/%s/%s]", cbase[0], cbase[1], cbase[2], cbase[3])},
+					Head:        api.Commit{ID: fmt.Sprintf("[github:%s/%s/%s/%s]", chead[0], chead[1], chead[2], chead[3])},
+					URL:         target,
+					PullRequest: mkPullRequest(),
+				},
+			),
+		),
+	)
+}
+
+func mkPullRequest() *api.PullRequest {
+	if number != "" && title != "" {
+		return &api.PullRequest{
+			Number: number,
+			Title:  title,
+		}
+	}
+	return nil
 }

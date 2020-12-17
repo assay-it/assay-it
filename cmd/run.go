@@ -28,12 +28,14 @@ func init() {
 
 var runCmd = &cobra.Command{
 	Use:   "run",
-	Short: "run the quality assurance at assay.it",
-	Long: `run the quality assurance at assay.it using test suites from
-	supplied source code repository. The repository has to be linked with 
-	the service beforehand.`,
+	Short: "run quality job for either latests or specific commit of source code repository",
+	Long: `
+run the quality assurance at assay.it using test suites from
+supplied source code repository. The repository has to be linked with 
+the service beforehand.`,
 	Example: `
 assay run facebadge/sample.assay.it --key Z2l0aHV...bWhaQQ
+assay run facebadge/sample.assay.it/master/8c7ec...dc59 --key Z2l0aHV...bWhaQQ
 assay run facebadge/sample.assay.it --url https://example.com --key Z2l0aHV...bWhaQQ
 	`,
 	SilenceUsage: true,
@@ -44,16 +46,36 @@ assay run facebadge/sample.assay.it --url https://example.com --key Z2l0aHV...bW
 
 func run(cmd *cobra.Command, args []string) error {
 	sc := strings.Split(args[0], "/")
-	if len(sc) < 2 {
-		return fmt.Errorf("invalid source code identity: %s, :owner/:repo is required", args[0])
-	}
-	sourcecode := fmt.Sprintf("github:%s:%s", sc[0], sc[1])
 
 	c := api.New(endpoint)
-	return eval(
-		assay.Join(
-			c.SignIn(digest),
-			c.WebHookSourceCode(sourcecode, target),
-		),
-	)
+
+	if len(sc) == 2 {
+		return eval(
+			assay.Join(
+				c.SignIn(digest),
+				c.WebHookSource(
+					api.SourceCodeID{
+						ID:  fmt.Sprintf("[github:%s/%s]", sc[0], sc[1]),
+						URL: target,
+					},
+				),
+			),
+		)
+	}
+
+	if len(sc) == 4 {
+		return eval(
+			assay.Join(
+				c.SignIn(digest),
+				c.WebHookSource(
+					api.SourceCodeID{
+						ID:  fmt.Sprintf("[github:%s/%s/%s/%s]", sc[0], sc[1], sc[2], sc[3]),
+						URL: target,
+					},
+				),
+			),
+		)
+	}
+
+	return fmt.Errorf("invalid source code identity: %s", args[0])
 }
