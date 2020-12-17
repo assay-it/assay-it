@@ -31,6 +31,12 @@ func init() {
 	webhookCmd.PersistentFlags().StringVar(&number, "number", "", "unique reference number of the change (e.g. pull request)")
 	webhookCmd.PersistentFlags().StringVar(&target, "url", "", "explicitly define target url to run quality check agains the deployment.")
 
+	webhookCmd.Flags().StringVar(&head, "head", "", "head reference of the change using the format :owner/:repo/:branch/:commit")
+	webhookCmd.MarkFlagRequired("head")
+
+	webhookCmd.Flags().StringVar(&base, "base", "", "base reference of the change using the format :owner/:repo/:branch/:commit")
+	webhookCmd.MarkFlagRequired("base")
+
 	//
 	webhookCmd.AddCommand(webhookSourceCmd)
 
@@ -38,13 +44,7 @@ func init() {
 	webhookCmd.AddCommand(webhookCommitCmd)
 
 	//
-	webhookCmd.AddCommand(webhookBranchCmd)
-
-	webhookBranchCmd.Flags().StringVar(&head, "head", "", "head reference of the change using the format :owner/:repo/:branch/:commit")
-	webhookBranchCmd.MarkFlagRequired("head")
-
-	webhookBranchCmd.Flags().StringVar(&base, "base", "", "base reference of the change using the format :owner/:repo/:branch/:commit")
-	webhookBranchCmd.MarkFlagRequired("base")
+	webhookCmd.AddCommand(webhookReleaseCmd)
 }
 
 var webhookCmd = &cobra.Command{
@@ -54,8 +54,8 @@ var webhookCmd = &cobra.Command{
 the command faciliatets CI/CD integration use-cases.`,
 	Example: `
 assay webhook source facebadge/sample.assay.it
-assay webhook commit facebadge/sample.assay.it/master/8c7ec...dc59
-assay webhook branch --base facebadge/sample.assay.it/master/8c7ec...dc59 --head faceb.../master/8c7ec...dc59
+assay webhook commit facebadge/sample.assay.it/main/8c7ec...dc59
+assay webhook branch --base facebadge/sample.assay.it/main/8c7ec...dc59 --head faceb.../feature/8c7ec...dc59
 	`,
 	SilenceUsage: true,
 	PreRunE:      requiredFlagKey,
@@ -64,7 +64,32 @@ assay webhook branch --base facebadge/sample.assay.it/master/8c7ec...dc59 --head
 }
 
 func webhook(cmd *cobra.Command, args []string) error {
-	return fmt.Errorf("unable to run webhook")
+	chead := strings.Split(head, "/")
+	cbase := strings.Split(base, "/")
+
+	if len(chead) != 4 {
+		return fmt.Errorf("invalid head identity: %s", head)
+	}
+
+	if len(cbase) != 4 {
+		return fmt.Errorf("invalid base identity: %s", base)
+	}
+
+	c := api.New(endpoint)
+	return eval(
+		assay.Join(
+			c.SignIn(digest),
+			c.WebHook(
+				api.Hook{
+					Base:        api.Commit{ID: fmt.Sprintf("[github:%s/%s/%s/%s]", cbase[0], cbase[1], cbase[2], cbase[3])},
+					Head:        api.Commit{ID: fmt.Sprintf("[github:%s/%s/%s/%s]", chead[0], chead[1], chead[2], chead[3])},
+					URL:         target,
+					PullRequest: mkPullRequest(),
+				},
+			),
+		),
+	)
+
 }
 
 //
@@ -114,7 +139,7 @@ var webhookCommitCmd = &cobra.Command{
 the command triggers quality assurance at assay.it using webhook api,
 it schedule quality job for specific commit of source code repository.`,
 	Example: `
-assay webhook commit facebadge/sample.assay.it/master/8c7ec...dc59
+assay webhook commit facebadge/sample.assay.it/main/8c7ec...dc59
 	`,
 	SilenceUsage: true,
 	PreRunE:      requiredFlagKey,
@@ -143,40 +168,33 @@ func webhookCommit(cmd *cobra.Command, args []string) error {
 	)
 }
 
-var webhookBranchCmd = &cobra.Command{
-	Use:   "branch",
-	Short: "run quality job for specific change (pull request) of source code repository",
+var webhookReleaseCmd = &cobra.Command{
+	Use:   "release",
+	Short: "run quality job for specific release (tag) of source code repository",
 	Long: `the command triggers quality assurance at assay.it using webhook api,
 the command faciliatets CI/CD integration use-cases.`,
 	Example: `
-assay webhook branch --base facebadge/sample.assay.it/master/8c7ec...dc59 --head faceb.../master/8c7ec...dc59
+assay webhook release facebadge/sample.assay.it/main/v0
 	`,
 	SilenceUsage: true,
 	PreRunE:      requiredFlagKey,
-	Args:         cobra.NoArgs,
-	RunE:         webhookBranch,
+	Args:         cobra.ExactArgs(1),
+	RunE:         webhookRelease,
 }
 
-func webhookBranch(cmd *cobra.Command, args []string) error {
-	chead := strings.Split(head, "/")
-	cbase := strings.Split(base, "/")
-
-	if len(chead) != 4 {
-		return fmt.Errorf("invalid head identity: %s", head)
-	}
-
-	if len(cbase) != 4 {
-		return fmt.Errorf("invalid base identity: %s", base)
+func webhookRelease(cmd *cobra.Command, args []string) error {
+	sc := strings.Split(args[0], "/")
+	if len(sc) != 4 {
+		return fmt.Errorf("invalid commit identity: %s", args[0])
 	}
 
 	c := api.New(endpoint)
 	return eval(
 		assay.Join(
 			c.SignIn(digest),
-			c.WebHook(
-				api.Hook{
-					Base:        api.Commit{ID: fmt.Sprintf("[github:%s/%s/%s/%s]", cbase[0], cbase[1], cbase[2], cbase[3])},
-					Head:        api.Commit{ID: fmt.Sprintf("[github:%s/%s/%s/%s]", chead[0], chead[1], chead[2], chead[3])},
+			c.WebHookRelease(
+				api.SourceCodeID{
+					ID:          fmt.Sprintf("[github:%s/%s/%s/%s]", sc[0], sc[1], sc[2], sc[3]),
 					URL:         target,
 					PullRequest: mkPullRequest(),
 				},
@@ -185,6 +203,8 @@ func webhookBranch(cmd *cobra.Command, args []string) error {
 	)
 }
 
+//
+//
 func mkPullRequest() *api.PullRequest {
 	if number != "" && title != "" {
 		return &api.PullRequest{

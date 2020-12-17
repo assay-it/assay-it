@@ -33,26 +33,25 @@ func stdout(hook *[]byte) assay.Arrow {
 
 //
 func (c *Client) WebHookSource(req SourceCodeID) assay.Arrow {
-	var hook []byte
-
-	return http.Join(
-		ø.POST("https://%s/webhook/sourcecode", c.api),
-		ø.Authorization().Val(&c.token),
-		ø.ContentJSON(),
-		ø.Send(req),
-		ƒ.Code(http.StatusCodeOK),
-		ƒ.Bytes(&hook),
-	).Then(
-		stdout(&hook),
-	)
+	return c.webhook("https://%s/webhook/sourcecode", req)
 }
 
 //
 func (c *Client) WebHookCommit(req SourceCodeID) assay.Arrow {
+	return c.webhook("https://%s/webhook/commit", req)
+}
+
+//
+func (c *Client) WebHookRelease(req SourceCodeID) assay.Arrow {
+	return c.webhook("https://%s/webhook/release", req)
+}
+
+//
+func (c *Client) webhook(uri string, req SourceCodeID) assay.Arrow {
 	var hook []byte
 
 	return http.Join(
-		ø.POST("https://%s/webhook/commit", c.api),
+		ø.POST(uri, c.api),
 		ø.Authorization().Val(&c.token),
 		ø.ContentJSON(),
 		ø.Send(req),
@@ -68,7 +67,7 @@ func (c *Client) WebHook(req Hook) assay.Arrow {
 	var hook []byte
 
 	return http.Join(
-		ø.POST("https://%s/webhook/branch", c.api),
+		ø.POST("https://%s/webhook", c.api),
 		ø.Authorization().Val(&c.token),
 		ø.ContentJSON(),
 		ø.Send(req),
