@@ -55,7 +55,7 @@ func (c *Client) webhook(uri string, req SourceCodeID) assay.Arrow {
 		ø.Authorization().Val(&c.token),
 		ø.ContentJSON(),
 		ø.Send(req),
-		ƒ.Code(http.StatusCodeOK),
+		ƒ.Code(http.StatusOK),
 		ƒ.Bytes(&hook),
 	).Then(
 		stdout(&hook),
@@ -71,7 +71,7 @@ func (c *Client) WebHook(req Hook) assay.Arrow {
 		ø.Authorization().Val(&c.token),
 		ø.ContentJSON(),
 		ø.Send(req),
-		ƒ.Code(http.StatusCodeOK),
+		ƒ.Code(http.StatusOK),
 		ƒ.Bytes(&hook),
 	).Then(
 		stdout(&hook),

@@ -33,7 +33,7 @@ func (c *Client) SignIn(digest string) assay.Arrow {
 		ø.Authorization().Is("Basic "+digest),
 		ø.ContentForm(),
 		ø.Send(tOAuthFlow{Type: "client_credentials"}),
-		ƒ.Code(http.StatusCodeOK),
+		ƒ.Code(http.StatusOK),
 		ƒ.Recv(&token),
 	).Then(
 		ç.FMap(func() error {
