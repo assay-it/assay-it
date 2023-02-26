@@ -15,14 +15,17 @@ import (
 	"path/filepath"
 )
 
+// Sandbox environment for Golang
 type Sandbox struct {
-	Path  string
-	Cache string
+	stdout io.Writer
+	Path   string
+	Cache  string
 }
 
-func NewSandbox(root string) (*Sandbox, error) {
+// Configure new sandbox environment
+func NewSandbox(stdout io.Writer, root string) (*Sandbox, error) {
 	if root == "" {
-		tmp, err := os.MkdirTemp(os.TempDir(), "assay")
+		tmp, err := os.MkdirTemp(os.TempDir(), org)
 		if err != nil {
 			return nil, err
 		}
@@ -35,12 +38,14 @@ func NewSandbox(root string) (*Sandbox, error) {
 	}
 
 	return &Sandbox{
-		Path:  root,
-		Cache: filepath.Join(root, "cache"),
+		stdout: stdout,
+		Path:   root,
+		Cache:  filepath.Join(root, "cache"),
 	}, nil
 }
 
-func (box *Sandbox) Compile(stdout io.Writer, pkg *Package) error {
+// Compile package, producing binary code
+func (box *Sandbox) Compile(pkg *Package) error {
 	gcc := exec.Command("go", "build", "-mod=mod")
 	gcc.Dir = pkg.SourceCode
 	gcc.Env = []string{
@@ -48,7 +53,7 @@ func (box *Sandbox) Compile(stdout io.Writer, pkg *Package) error {
 		"GOPATH=" + box.Path,
 		"GOCACHE=" + box.Cache,
 	}
-	gcc.Stderr, gcc.Stdout = stdout, stdout
+	gcc.Stderr, gcc.Stdout = box.stdout, box.stdout
 
 	err := gcc.Run()
 	if err != nil {

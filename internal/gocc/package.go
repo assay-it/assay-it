@@ -83,8 +83,8 @@ func (pkg *Package) copyFromGo(file string) ([]string, error) {
 }
 
 func (pkg *Package) copyFromMd(file string) ([]string, error) {
-	gf := filepath.Join(pkg.SourceCode, strings.ReplaceAll(filepath.Base(file), ".md", ".go"))
-	cc := http.New("main", gf)
+	gofile := filepath.Join(pkg.SourceCode, strings.ReplaceAll(filepath.Base(file), ".md", ".go"))
+	cc := http.New("main", gofile)
 	if err := katt.Decode(file, cc); err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (pkg *Package) copyFromMd(file string) ([]string, error) {
 	}
 
 	fset := token.NewFileSet()
-	code, err := parser.ParseFile(fset, gf, nil, parser.ParseComments)
+	code, err := parser.ParseFile(fset, gofile, nil, parser.ParseComments)
 	if err != nil {
 		return nil, err
 	}

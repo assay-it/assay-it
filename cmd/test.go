@@ -21,17 +21,15 @@ import (
 
 func init() {
 	rootCmd.AddCommand(testCmd)
-	testCmd.Flags().StringVarP(&testConfig, "config", "c", "", "config file")
-	testCmd.Flags().StringVarP(&testBuildDir, "build-dir", "b", "", "local cache to be used for building the test")
-	testCmd.Flags().BoolVarP(&testVerbose, "verbose", "v", false, "verbose output")
-	testCmd.Flags().BoolVarP(&testCleanup, "clean", "f", false, "clean up sandbox")
+	testCmd.Flags().StringVarP(&testConfig, "config", "c", "", "path to assay-it config file (default .assay-it.json)")
+	testCmd.Flags().StringVarP(&testBuildDir, "build-dir", "b", "", "build dir to cache packages and build artefact (default os temp)")
+	testCmd.Flags().BoolVarP(&testVerbose, "verbose", "v", false, "enable verbose output of tests results")
 }
 
 var (
 	testConfig   string
 	testBuildDir string
 	testVerbose  bool
-	testCleanup  bool
 )
 
 var testCmd = &cobra.Command{
@@ -56,15 +54,23 @@ func test(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("No suites are defined or config file is missing: %w", err)
 	}
 
+	//
+	// Config Sandbox
+	//
+
 	if testBuildDir == "" {
 		testBuildDir = filepath.Join(os.TempDir(), "assay-it")
 	}
 
-	stderr.Info("==> config %s\n", testBuildDir)
-	sandbox, err := gocc.NewSandbox(testBuildDir)
+	sandbox, err := gocc.NewSandbox(os.Stderr, testBuildDir)
 	if err != nil {
 		return fmt.Errorf("Unable to config build-dir %s: %w", testBuildDir, err)
 	}
+	stderr.Info("==> env %s\n", testBuildDir)
+
+	//
+	// Config Package
+	//
 
 	dir, err := os.Getwd()
 	if err != nil {
@@ -75,12 +81,10 @@ func test(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("Unable to config package %s: %w", filepath.Base(dir), err)
 	}
-	defer func() {
-		if testCleanup {
-			os.RemoveAll(pkg.SourceCode)
-		}
-	}()
 
+	//
+	// Associate suites with package
+	//
 	units := []string{}
 
 	for _, suite := range suites {
@@ -92,6 +96,9 @@ func test(cmd *cobra.Command, args []string) error {
 		units = append(units, seq...)
 	}
 
+	//
+	// Crate mandatory files (main.go & mod)
+	//
 	err = pkg.CreateRunner(units)
 	if err != nil {
 		return err
@@ -102,11 +109,19 @@ func test(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	//
+	// Compile
+	//
+
 	stderr.Info("\n==> compile \n")
-	err = sandbox.Compile(os.Stderr, pkg)
+	err = sandbox.Compile(pkg)
 	if err != nil {
 		return err
 	}
+
+	//
+	// Execute
+	//
 
 	stdout.Notice("\n==> testing \n")
 	buf := bytes.Buffer{}
@@ -168,7 +183,7 @@ func testWriteResults(data []byte) error {
 			stdout.Warning("%s\n", unit.Reason)
 		}
 		if testVerbose {
-			stdout.JSON(unit.Payload)
+			stdout.FormattedJSON(unit.Payload)
 		}
 	}
 

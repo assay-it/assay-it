@@ -18,6 +18,7 @@ import (
 	"github.com/fatih/color"
 )
 
+// Printer to console utility
 type Printer struct {
 	stdout io.Writer
 }
@@ -53,7 +54,7 @@ func (printer *Printer) Info(s string, args ...any) error {
 	return nil
 }
 
-func (printer *Printer) JSON(data string) error {
+func (printer *Printer) FormattedJSON(data string) error {
 	var obj map[string]any
 	err := json.Unmarshal([]byte(data), &obj)
 	if err != nil {

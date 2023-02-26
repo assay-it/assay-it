@@ -190,6 +190,7 @@ func (*decoderResponsePayload) flush(spec *katt, mod *http.Mod) error {
 	return nil
 }
 
+// Decodes KATT file into Golang module
 func Decode(filename string, mod *http.Mod) error {
 	file, err := os.Open(filename)
 	if err != nil {
