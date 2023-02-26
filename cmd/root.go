@@ -1,5 +1,5 @@
 //
-// Copyright (C) 2020 assay.it
+// Copyright (C) 2020 - 2023 assay.it
 //
 // This file may be modified and distributed under the terms
 // of the MIT license.  See the LICENSE file for details.
@@ -9,13 +9,11 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strings"
 
-	"github.com/assay-it/sdk-go/assay"
-	"github.com/assay-it/sdk-go/http"
+	"github.com/assay-it/assay/internal/printer"
 	"github.com/spf13/cobra"
 )
 
@@ -29,16 +27,9 @@ func Execute() {
 }
 
 var (
-	endpoint string
-	digest   string
-	debug    bool
+	stdout = printer.New(os.Stdout)
+	stderr = printer.New(os.Stderr)
 )
-
-func init() {
-	rootCmd.PersistentFlags().StringVar(&endpoint, "api", "api.assay.it", "assay's rest api endpoint")
-	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "debug output of http traffic with assay.it endpoint")
-	rootCmd.PersistentFlags().StringVarP(&digest, "key", "t", "", "personal access key to authenticate with assay.it")
-}
 
 var rootCmd = &cobra.Command{
 	Use:     "assay",
@@ -50,25 +41,4 @@ var rootCmd = &cobra.Command{
 
 func root(cmd *cobra.Command, args []string) {
 	cmd.Help()
-}
-
-//
-// requiredFlagKey check presence of secret key, use it with PreRunE
-func requiredFlagKey(cmd *cobra.Command, args []string) error {
-	if digest == "" {
-		return errors.New("undefined secret key, obtain a new personal access key from assay.it and use it with --key flag")
-	}
-	return nil
-}
-
-//
-// eval executed side-effect on http computation
-func eval(f assay.Arrow) error {
-	deb := assay.LogLevelNone
-	if debug {
-		deb = assay.LogLevelDebug
-	}
-
-	io := http.DefaultIO(assay.Logging(deb))
-	return f(io).Fail
 }
