@@ -45,7 +45,7 @@ brews:
     folder: Formula
     goarm: "7"
     homepage:  https://assay.it
-    description: Confirm Quality and Eliminate Risk by Testing in Production.
+    description: Confirm Quality and Eliminate Risk by Testing Microservices in Production.
     license: MIT
     test: |
       system "#{bin}/assay-it -v"
