@@ -55,7 +55,7 @@ func (pkg *Package) CopyFrom(file string) ([]string, error) {
 	case filepath.Ext(file) == ".md":
 		return pkg.copyFromMd(file)
 	default:
-		return nil, fmt.Errorf("Not supported %s", file)
+		return nil, fmt.Errorf("not supported %s", file)
 	}
 }
 
@@ -153,6 +153,10 @@ func (pkg *Package) CreateRunner(tests []string) error {
 
 	fset := token.NewFileSet()
 	code, err := parser.ParseFile(fset, run, nil, parser.ParseComments)
+	if err != nil {
+		return err
+	}
+
 	astReWrite(code, tests)
 
 	f, err := os.Create(run)

@@ -51,7 +51,7 @@ assay run facebadge/sample.assay.it --url https://example.com --key Z2l0aHV...bW
 func test(cmd *cobra.Command, args []string) error {
 	suites, err := testConfigFile(args)
 	if err != nil {
-		return fmt.Errorf("No suites are defined or config file is missing: %w", err)
+		return fmt.Errorf("no suites are defined or config file is missing: %w", err)
 	}
 
 	//
@@ -64,7 +64,7 @@ func test(cmd *cobra.Command, args []string) error {
 
 	sandbox, err := gocc.NewSandbox(os.Stderr, testBuildDir)
 	if err != nil {
-		return fmt.Errorf("Unable to config build-dir %s: %w", testBuildDir, err)
+		return fmt.Errorf("unable to config build-dir %s: %w", testBuildDir, err)
 	}
 	stderr.Info("==> env %s\n", testBuildDir)
 
@@ -79,7 +79,7 @@ func test(cmd *cobra.Command, args []string) error {
 
 	pkg, err := gocc.NewPackage(sandbox.Path, filepath.Base(dir))
 	if err != nil {
-		return fmt.Errorf("Unable to config package %s: %w", filepath.Base(dir), err)
+		return fmt.Errorf("unable to config package %s: %w", filepath.Base(dir), err)
 	}
 
 	//
@@ -91,7 +91,7 @@ func test(cmd *cobra.Command, args []string) error {
 		stderr.Info("use: %s\n", suite)
 		seq, err := pkg.CopyFrom(suite)
 		if err != nil {
-			return fmt.Errorf("Unable to copy %s: %w", suite, err)
+			return fmt.Errorf("unable to copy %s: %w", suite, err)
 		}
 		units = append(units, seq...)
 	}
