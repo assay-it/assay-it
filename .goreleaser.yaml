@@ -51,8 +51,6 @@ brews:
       system "#{bin}/assay-it -v"
     dependencies:
       - name: go
-        type: optional
-      - name: git
     install: |-
       bin.install "assay-it"
 
