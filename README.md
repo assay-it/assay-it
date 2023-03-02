@@ -1,7 +1,7 @@
 <p align="center">
   <img src="./doc/assay-it.svg" height="120" />
   <h3 align="center">assay-it</h3>
-  <p align="center"><strong>Test Microservice in Production. Confirm Quality & Eliminate Risk.</strong></p>
+  <p align="center"><strong>Test Cloud Apps in Production. Confirm Quality & Eliminate Risk.</strong></p>
 
   <p align="center">
     <!-- Discussion -->
@@ -40,18 +40,29 @@ Construct automated quality check pipelines for your applications, microservices
 
 ## Quick Example
 
-First install the assay-it command line utility
+Let's get your start with `assay-it`. These few simple steps explain how to run a first quality check.
+
+### Install It
+
+`assay-it` is an open source command line utility. The utility is designed for **testing** of loosely coupled topologies such as serverless applications, microservices and other systems that rely on interfaces, protocols and its behaviors. It does the unit-like testing but in distributed environments.
+
+Easiest way to install the latest version of utility using `brew` but binaries are also available [here](https://github.com/assay-it/assay-it/releases). 
+
 
 ```bash 
 brew tap assay-it/homebrew-tap
 brew install -q assay-it
 ```
 
-Then implement test scenario using [type safe, pure functional Golang combinators](https://github.com/fogfish/gurl) defined by ᵍ🆄🆁🅻 library. 
+### Code It
+
+The utility uses Behavior as a Code concept to depict testing suites for protocol endpoints exposed by software components. These scenarios check the correctness and makes the formal proof of quality.
+
+The utility strongly recommends usages of [type safe, pure functional Golang combinators](https://github.com/fogfish/gurl/blob/main/doc/user-guide.md) implemented by [ᵍ🆄🆁🅻 library](https://github.com/fogfish/gurl) for development of testing suites. It also allows anyone to use Markdown syntax for simple suites.
 
 ```go
-// httpbin.go file
-package httpbin
+// suite.go file
+package suite
 
 import (
   "github.com/fogfish/gurl/v2/http"
@@ -69,10 +80,17 @@ func TestHttpBinGet() http.Arrow {
 }
 ```
 
-Now start testing
+### Run It
+
+Run the the quality assessment with <code>assay-it test suite.go</code>. The utility automatically downloads imported modules, compiles suites and outputs results into console.
 
 ```bash
-assay-it test httpbin.go
+assay-it test suite.go
+
+== testing
+PASS: main.TestHttpBinGet
+
+PASS
 ```
 
 ## How To Contribute
