@@ -10,7 +10,7 @@
     </a>
     <!-- Build Status  -->
     <a href="https://github.com/assay-it/assay-it/actions/">
-      <img src="https://github.com/assay-it/assay-it/workflows/build/badge.svg" />
+      <img src="https://github.com/assay-it/assay-it/workflows/test/badge.svg" />
     </a>
     <!-- GitHub -->
     <a href="http://github.com/assay-it/assay-it">
@@ -25,18 +25,48 @@
 
 --- 
 
+Construct automated quality check pipelines for your applications, microservices and other endpoints across deployments and environments.
 
-This is a command line application to use with https://assay.it - quality assurance solution for Serverless applications.
+[![asciicast](https://asciinema.org/a/564197.svg)](https://asciinema.org/a/564197)
 
-The tool facilitates assay.it integration with CI/CD solutions, construction of automation pipelines, etc.
 
-## Get started
+## Quick Example
 
-1. Sign up for https://assay.it with your GitHub developer account.
+First install the assay-it command line utility
 
-2. Generate personal access key at your Profile settings.
+```bash 
+brew tap assay-it/homebrew-tap
+brew install -q assay-it
+```
 
-3. Install the cli `go get github.com/assay-it/assay`
+Then implement test scenario using [type safe, pure functional Golang combinators](https://github.com/fogfish/gurl) defined by ᵍ🆄🆁🅻 library. 
+
+```go
+// httpbin.go file
+package httpbin
+
+import (
+  "github.com/fogfish/gurl/v2/http"
+  ƒ "github.com/fogfish/gurl/v2/http/recv"
+  ø "github.com/fogfish/gurl/v2/http/send"
+)
+
+func TestHttpBinGet() http.Arrow {
+  return http.GET(
+    ø.URI("http://httpbin.org/get"),
+
+    ƒ.Status.OK,
+    ƒ.ContentType.ApplicationJSON,
+  )
+}
+```
+
+Now start testing
+
+```bash
+assay-it test httpbin.go
+```
+
 
 ## License
 
