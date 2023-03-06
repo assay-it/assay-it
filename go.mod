@@ -1,4 +1,4 @@
-module github.com/assay-it/assay
+module github.com/assay-it/assay-it
 
 go 1.19
 
