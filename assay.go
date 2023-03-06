@@ -9,7 +9,7 @@
 package main
 
 import (
-	"github.com/assay-it/assay/cmd"
+	"github.com/assay-it/assay-it/cmd"
 )
 
 func main() {

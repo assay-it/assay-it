@@ -21,8 +21,8 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/assay-it/assay/internal/ast/http"
-	"github.com/assay-it/assay/internal/katt"
+	"github.com/assay-it/assay-it/internal/ast/http"
+	"github.com/assay-it/assay-it/internal/katt"
 )
 
 const (

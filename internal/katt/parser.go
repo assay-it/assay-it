@@ -15,9 +15,9 @@ import (
 	"regexp"
 	"strings"
 
-	ghttp "github.com/assay-it/assay/internal/ast/http"
-	"github.com/assay-it/assay/internal/ast/http/recv"
-	"github.com/assay-it/assay/internal/ast/http/send"
+	ghttp "github.com/assay-it/assay-it/internal/ast/http"
+	"github.com/assay-it/assay-it/internal/ast/http/recv"
+	"github.com/assay-it/assay-it/internal/ast/http/send"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )

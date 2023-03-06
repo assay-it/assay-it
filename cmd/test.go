@@ -15,7 +15,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/assay-it/assay/internal/gocc"
+	"github.com/assay-it/assay-it/internal/gocc"
 	"github.com/spf13/cobra"
 )
 

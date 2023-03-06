@@ -13,7 +13,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/assay-it/assay/internal/printer"
+	"github.com/assay-it/assay-it/internal/printer"
 	"github.com/spf13/cobra"
 )
 

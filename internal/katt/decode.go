@@ -15,7 +15,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/assay-it/assay/internal/ast/http"
+	"github.com/assay-it/assay-it/internal/ast/http"
 )
 
 type decoder interface {
