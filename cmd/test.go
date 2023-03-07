@@ -24,12 +24,14 @@ func init() {
 	testCmd.Flags().StringVarP(&testConfig, "config", "c", "", "path to assay-it config file (default .assay-it.json)")
 	testCmd.Flags().StringVarP(&testBuildDir, "build-dir", "b", "", "build dir to cache packages and build artefact (default os temp)")
 	testCmd.Flags().BoolVarP(&testVerbose, "verbose", "v", false, "enable verbose output of tests results")
+	testCmd.Flags().StringVarP(&testSut, "sut", "u", "", "url to system under test")
 }
 
 var (
 	testConfig   string
 	testBuildDir string
 	testVerbose  bool
+	testSut      string
 )
 
 var testCmd = &cobra.Command{
@@ -99,7 +101,7 @@ func test(cmd *cobra.Command, args []string) error {
 	//
 	// Crate mandatory files (main.go & mod)
 	//
-	err = pkg.CreateRunner(units)
+	err = pkg.CreateRunner(testSut, units)
 	if err != nil {
 		return err
 	}
