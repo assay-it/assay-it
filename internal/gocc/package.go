@@ -18,6 +18,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"unicode"
 
@@ -134,7 +135,7 @@ func astUnitTestFunc(node ast.Node) *ast.FuncDecl {
 	return nil
 }
 
-func (pkg *Package) CreateRunner(tests []string) error {
+func (pkg *Package) CreateRunner(defaultHost string, tests []string) error {
 	run := filepath.Join(pkg.SourceCode, "runner.go")
 
 	err := os.WriteFile(run, []byte(`
@@ -157,7 +158,7 @@ func (pkg *Package) CreateRunner(tests []string) error {
 		return err
 	}
 
-	astReWrite(code, tests)
+	astReWrite(code, defaultHost, tests)
 
 	f, err := os.Create(run)
 	if err != nil {
@@ -173,23 +174,41 @@ func (pkg *Package) CreateRunner(tests []string) error {
 	return nil
 }
 
-func astReWrite(node *ast.File, tests []string) {
+func astReWrite(node *ast.File, defaultHost string, tests []string) {
 	ast.Inspect(node, func(node ast.Node) bool {
 		switch f := node.(type) {
 		case *ast.FuncDecl:
 			if f.Name.Name == "main" {
-				f.Body = astMain(tests)
+				f.Body = astMain(defaultHost, tests)
 			}
 		}
 		return true
 	})
 }
 
-func astMain(tests []string) *ast.BlockStmt {
+func astMain(defaultHost string, tests []string) *ast.BlockStmt {
 	args := []ast.Expr{
 		&ast.SelectorExpr{
-			X:   &ast.Ident{Name: "os"},
-			Sel: &ast.Ident{Name: "Stdout"},
+			X:   ast.NewIdent("os"),
+			Sel: ast.NewIdent("Stdout"),
+		},
+		&ast.CallExpr{
+			Fun: &ast.SelectorExpr{X: ast.NewIdent("http"), Sel: ast.NewIdent("New")},
+			Args: []ast.Expr{
+				&ast.CallExpr{
+					Fun:  &ast.SelectorExpr{X: ast.NewIdent("http"), Sel: ast.NewIdent("WithMemento")},
+					Args: []ast.Expr{},
+				},
+				&ast.CallExpr{
+					Fun: &ast.SelectorExpr{X: ast.NewIdent("http"), Sel: ast.NewIdent("WithDefaultHost")},
+					Args: []ast.Expr{
+						&ast.BasicLit{
+							Kind:  token.STRING,
+							Value: strconv.Quote(defaultHost),
+						},
+					},
+				},
+			},
 		},
 	}
 
@@ -201,7 +220,7 @@ func astMain(tests []string) *ast.BlockStmt {
 		List: []ast.Stmt{
 			&ast.ExprStmt{
 				X: &ast.CallExpr{
-					Fun:  &ast.SelectorExpr{X: &ast.Ident{Name: "http"}, Sel: &ast.Ident{Name: "WriteOnce"}},
+					Fun:  &ast.SelectorExpr{X: ast.NewIdent("http"), Sel: ast.NewIdent("WriteOnce")},
 					Args: args,
 				},
 			},

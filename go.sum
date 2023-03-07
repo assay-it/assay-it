@@ -5,8 +5,8 @@ github.com/ajg/form v1.5.2-0.20200323032839-9aeb3cf462e1/go.mod h1:uL1WgH+h2mgNt
 github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/fatih/color v1.14.1 h1:qfhVLaG5s+nCROl1zJsZRxFeYrHLqWroPOQ8BWiNb4w=
 github.com/fatih/color v1.14.1/go.mod h1:2oHN61fhTpgcxD3TSWCgKDiH1+x4OiDVVGH8WlgGZGg=
-github.com/fogfish/gurl/v2 v2.2.0 h1:5ZNmGWvDpZNyJsM797Ok2ADMVNSRLjw+G7tE2ZqIMNc=
-github.com/fogfish/gurl/v2 v2.2.0/go.mod h1:jje00rRd/z7Ac5QYKk5FfGsMTVCO1XPB6uyqYafUUk0=
+github.com/fogfish/gurl/v2 v2.3.0 h1:jr69jZidJbO10RC1qDsPIlfc+mHtsWNXDyz6RcTZ+sw=
+github.com/fogfish/gurl/v2 v2.3.0/go.mod h1:VNr41YI/Ndmmv5ReXKzc6ooQBycUGLIK1y8D9hHhMbY=
 github.com/fogfish/it/v2 v2.0.1 h1:vu3kV2xzYDPHoMHMABxXeu5CoMcTfRc4gkWkzOUkRJY=
 github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f h1:7LYC+Yfkj3CTRcShK0KOL/w6iTiKyqqBA9a41Wnggw8=
 github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f/go.mod h1:pFlLw2CfqZiIBOx6BuCeRLCrfxBJipTY0nIOF/VbGcI=

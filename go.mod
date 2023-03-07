@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/TylerBrock/colorjson v0.0.0-20200706003622-8a50f05110d2
 	github.com/fatih/color v1.14.1
-	github.com/fogfish/gurl/v2 v2.2.0
+	github.com/fogfish/gurl/v2 v2.3.0
 	github.com/spf13/cobra v1.6.1
 	golang.org/x/text v0.7.0
 )
