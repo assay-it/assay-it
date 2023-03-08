@@ -55,7 +55,7 @@ func (printer *Printer) Info(s string, args ...any) error {
 }
 
 func (printer *Printer) FormattedJSON(data string) error {
-	var obj map[string]any
+	var obj any
 	err := json.Unmarshal([]byte(data), &obj)
 	if err != nil {
 		return err
