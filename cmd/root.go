@@ -9,8 +9,11 @@
 package cmd
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/assay-it/assay-it/internal/printer"
@@ -32,13 +35,78 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:     "assay",
-	Short:   "command line interface to https://assay.it",
-	Long:    `command line interface to https://assay.it`,
+	Use:   "assay-it",
+	Short: "Confirm Quality and Eliminate Risk by Testing Microservices in Production.",
+	Long: `
+Confirm Quality and Eliminate Risk by Testing Microservices in Production.
+Runs testing of services across environment and deployments.
+	`,
 	Run:     root,
-	Version: "v0",
+	Version: "v1.1.0",
 }
 
 func root(cmd *cobra.Command, args []string) {
 	cmd.Help()
+}
+
+// helper function outputs return of testing
+// built over JSON protocol github.com/fogfish/gurl/v2/http.WriteOnce
+func stdoutTestResults(silent, verbose bool, data []byte) error {
+	type Status struct {
+		ID       string `json:"id"`
+		Status   string `json:"status"`
+		Duration string `json:"duration"`
+		Reason   string `json:"reason,omitempty"`
+		Payload  string `json:"payload"`
+	}
+
+	var suites []Status
+	if err := json.Unmarshal(data, &suites); err != nil {
+		return err
+	}
+
+	suitesByPkg := map[string][]Status{}
+	for _, suite := range suites {
+		pkg := strings.TrimSuffix(suite.ID, filepath.Ext(suite.ID))
+		if filepath.Ext(suite.ID) == "" {
+			pkg = "main"
+		}
+
+		if _, has := suitesByPkg[pkg]; !has {
+			suitesByPkg[pkg] = []Status{}
+		}
+		suitesByPkg[pkg] = append(suitesByPkg[pkg], suite)
+	}
+
+	hasFailed := false
+	for pkg, seq := range suitesByPkg {
+		hasPackageFailed := false
+		for _, unit := range seq {
+			if unit.Status == "success" {
+				if !silent {
+					stdout.Success("|-- PASS: %s (%s)\n", unit.ID, unit.Duration)
+				}
+			} else {
+				hasPackageFailed = true
+				stdout.Error("|-- FAIL: %s (%s)\n", unit.ID, unit.Duration)
+				stdout.Warning("|\t%s\n", unit.Reason)
+			}
+			if verbose {
+				stdout.FormattedJSON(unit.Payload)
+			}
+		}
+
+		if hasPackageFailed {
+			stdout.Error("FAIL\t%s\n", pkg)
+			hasFailed = true
+		} else {
+			stdout.Success("PASS\t%s\n", pkg)
+		}
+	}
+
+	if hasFailed {
+		return errors.New("failed")
+	}
+
+	return nil
 }

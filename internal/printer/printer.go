@@ -54,6 +54,10 @@ func (printer *Printer) Info(s string, args ...any) error {
 	return nil
 }
 
+func (printer *Printer) Write(p []byte) (n int, err error) {
+	return printer.stdout.Write(p)
+}
+
 func (printer *Printer) FormattedJSON(data string) error {
 	var obj any
 	err := json.Unmarshal([]byte(data), &obj)

@@ -56,9 +56,11 @@ brew install -q assay-it
 
 ### Code It
 
-The utility uses Behavior as a Code concept to depict testing suites for protocol endpoints exposed by software components. These scenarios check the correctness and makes the formal proof of quality.
+`assay-it` checks the correctness and makes the formal proof of quality in loosely coupled topologies such as serverless applications, microservices and other systems that rely on interface syntaxes and its behaviors. Testing suites are [type safe and pure functional test specification](https://github.com/fogfish/gurl/blob/main/doc/user-guide.md) of protocol endpoints exposed by software components. The command requires the suite development using Golang syntax implemented by [ᵍ🆄🆁🅻 library](https://github.com/fogfish/gurl)  but limited functionality is supported with Markdown documents.
 
-The utility strongly recommends usages of [type safe, pure functional Golang combinators](https://github.com/fogfish/gurl/blob/main/doc/user-guide.md) implemented by [ᵍ🆄🆁🅻 library](https://github.com/fogfish/gurl) for development of testing suites. It also allows anyone to use Markdown syntax for simple suites.
+```
+assay-it testspec > suite.go
+```
 
 ```go
 // suite.go file
@@ -82,15 +84,13 @@ func TestHttpBinGet() http.Arrow {
 
 ### Run It
 
-Run the the quality assessment with <code>assay-it test suite.go</code>. The utility automatically downloads imported modules, compiles suites and outputs results into console.
+Run the the quality assessment with `assay-it eval suite.go`. The utility automatically downloads imported modules, compiles suites and outputs results into console.
 
 ```bash
-assay-it test suite.go
+assay-it eval suite.go
 
-== testing
-PASS: main.TestHttpBinGet
-
-PASS
+|-- PASS: TestHttpBinGet (325.187959ms)
+PASS	main
 ```
 
 ## How To Contribute
