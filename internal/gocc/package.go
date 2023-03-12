@@ -18,9 +18,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
-	"unicode"
 
 	"github.com/assay-it/assay-it/internal/ast/http"
 	"github.com/assay-it/assay-it/internal/katt"
@@ -49,7 +47,7 @@ func NewPackage(root string, pkg string) (*Package, error) {
 	}, nil
 }
 
-func (pkg *Package) CopyFrom(file string) ([]string, error) {
+func (pkg *Package) CopyFrom(file string) (*Suite, error) {
 	switch {
 	case filepath.Ext(file) == ".go":
 		return pkg.copyFromGo(file)
@@ -60,7 +58,7 @@ func (pkg *Package) CopyFrom(file string) ([]string, error) {
 	}
 }
 
-func (pkg *Package) copyFromGo(file string) ([]string, error) {
+func (pkg *Package) copyFromGo(file string) (*Suite, error) {
 	fset := token.NewFileSet()
 	code, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 	if err != nil {
@@ -80,10 +78,14 @@ func (pkg *Package) copyFromGo(file string) ([]string, error) {
 		return nil, err
 	}
 
-	return astLookupUnitTest(code), nil
+	return &Suite{
+		File:  file,
+		Pkg:   "main",
+		Units: astLookupUnitTest(code),
+	}, nil
 }
 
-func (pkg *Package) copyFromMd(file string) ([]string, error) {
+func (pkg *Package) copyFromMd(file string) (*Suite, error) {
 	gofile := filepath.Join(pkg.SourceCode, strings.ReplaceAll(filepath.Base(file), ".md", ".go"))
 	cc := http.New("main", gofile)
 	if err := katt.Decode(file, cc); err != nil {
@@ -99,43 +101,15 @@ func (pkg *Package) copyFromMd(file string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return astLookupUnitTest(code), nil
+
+	return &Suite{
+		File:  file,
+		Pkg:   "main",
+		Units: astLookupUnitTest(code),
+	}, nil
 }
 
-func astLookupUnitTest(node *ast.File) (units []string) {
-	ast.Inspect(node, func(n ast.Node) bool {
-		if f := astUnitTestFunc(n); f != nil {
-			units = append(units, f.Name.Name)
-		}
-		return true
-	})
-	return
-}
-
-func astUnitTestFunc(node ast.Node) *ast.FuncDecl {
-	switch f := node.(type) {
-	case *ast.FuncDecl:
-		if !unicode.IsUpper([]rune(f.Name.Name)[0]) || f.Type.Results == nil || len(f.Type.Params.List) != 0 || len(f.Type.Results.List) != 1 {
-			return nil
-		}
-		if !strings.HasPrefix(f.Name.Name, "Test") {
-			return nil
-		}
-
-		switch t := f.Type.Results.List[0].Type.(type) {
-		case *ast.SelectorExpr:
-			switch l := t.X.(type) {
-			case *ast.Ident:
-				if l.Name == "http" && t.Sel.Name == "Arrow" {
-					return f
-				}
-			}
-		}
-	}
-	return nil
-}
-
-func (pkg *Package) CreateRunner(defaultHost string, tests []string) error {
+func (pkg *Package) CreateRunner(tests []*Suite) error {
 	run := filepath.Join(pkg.SourceCode, "runner.go")
 
 	err := os.WriteFile(run, []byte(`
@@ -158,7 +132,7 @@ func (pkg *Package) CreateRunner(defaultHost string, tests []string) error {
 		return err
 	}
 
-	astReWrite(code, defaultHost, tests)
+	astReWrite(code, tests)
 
 	f, err := os.Create(run)
 	if err != nil {
@@ -174,60 +148,6 @@ func (pkg *Package) CreateRunner(defaultHost string, tests []string) error {
 	return nil
 }
 
-func astReWrite(node *ast.File, defaultHost string, tests []string) {
-	ast.Inspect(node, func(node ast.Node) bool {
-		switch f := node.(type) {
-		case *ast.FuncDecl:
-			if f.Name.Name == "main" {
-				f.Body = astMain(defaultHost, tests)
-			}
-		}
-		return true
-	})
-}
-
-func astMain(defaultHost string, tests []string) *ast.BlockStmt {
-	args := []ast.Expr{
-		&ast.SelectorExpr{
-			X:   ast.NewIdent("os"),
-			Sel: ast.NewIdent("Stdout"),
-		},
-		&ast.CallExpr{
-			Fun: &ast.SelectorExpr{X: ast.NewIdent("http"), Sel: ast.NewIdent("New")},
-			Args: []ast.Expr{
-				&ast.CallExpr{
-					Fun:  &ast.SelectorExpr{X: ast.NewIdent("http"), Sel: ast.NewIdent("WithMemento")},
-					Args: []ast.Expr{},
-				},
-				&ast.CallExpr{
-					Fun: &ast.SelectorExpr{X: ast.NewIdent("http"), Sel: ast.NewIdent("WithDefaultHost")},
-					Args: []ast.Expr{
-						&ast.BasicLit{
-							Kind:  token.STRING,
-							Value: strconv.Quote(defaultHost),
-						},
-					},
-				},
-			},
-		},
-	}
-
-	for _, test := range tests {
-		args = append(args, ast.NewIdent(test))
-	}
-
-	return &ast.BlockStmt{
-		List: []ast.Stmt{
-			&ast.ExprStmt{
-				X: &ast.CallExpr{
-					Fun:  &ast.SelectorExpr{X: ast.NewIdent("http"), Sel: ast.NewIdent("WriteOnce")},
-					Args: args,
-				},
-			},
-		},
-	}
-}
-
 func (pkg *Package) CreateMod() error {
 	run := filepath.Join(pkg.SourceCode, "go.mod")
 
@@ -239,8 +159,8 @@ func (pkg *Package) CreateMod() error {
 	return nil
 }
 
-func (pkg *Package) Run(stdout io.Writer) error {
-	run := exec.Command("./" + pkg.Name)
+func (pkg *Package) Run(stdout io.Writer, defaultHost string) error {
+	run := exec.Command("./"+pkg.Name, defaultHost)
 	run.Dir = pkg.SourceCode
 	run.Stderr, run.Stdout = stdout, stdout
 
