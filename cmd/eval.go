@@ -127,7 +127,7 @@ func eval(cmd *cobra.Command, args []string) error {
 	}
 
 	stdout.Notice("\n==> testing \n")
-	out, err := tt.Test(testSut)
+	out, err := tt.Test(evalSut)
 	if err != nil {
 		stderr.Write(out)
 		return err
