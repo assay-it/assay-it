@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/TylerBrock/colorjson"
 	"github.com/fatih/color"
@@ -74,13 +73,14 @@ func (printer *Printer) FormattedJSON(data string) error {
 		return err
 	}
 
-	escaped := "| " + strings.ReplaceAll(string(encoded), "\n", "\n| ")
+	// escaped := "| " + strings.ReplaceAll(string(encoded), "\n", "\n| ")
+	escaped := string(encoded)
 	_, err = printer.stdout.Write([]byte(escaped))
 	if err != nil {
 		return err
 	}
 
-	_, err = printer.stdout.Write([]byte("\n"))
+	_, err = printer.stdout.Write([]byte("\n\n"))
 	if err != nil {
 		return err
 	}

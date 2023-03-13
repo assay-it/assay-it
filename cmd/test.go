@@ -10,6 +10,7 @@ package cmd
 
 import (
 	"os"
+	"time"
 
 	"github.com/assay-it/assay-it/internal/tester"
 	"github.com/spf13/cobra"
@@ -98,14 +99,16 @@ assay-it test ./...
 }
 
 func test(cmd *cobra.Command, args []string) error {
+	t := time.Now()
+
 	if len(args) == 0 {
 		testSilent = false
 		if err := testModeLocal(cmd, ""); err != nil {
-			stdout.Error("\nFAIL\n")
+			stdout.Error("\nFAIL (%s)\n", time.Since(t))
 			os.Exit(1)
 		}
 
-		stdout.Success("\nPASS\n")
+		stdout.Success("\nPASS (%s)\n", time.Since(t))
 		return nil
 	}
 
@@ -118,11 +121,11 @@ func test(cmd *cobra.Command, args []string) error {
 	}
 
 	if !passed {
-		stdout.Error("\nFAIL\n")
+		stdout.Error("\nFAIL (%s)\n", time.Since(t))
 		os.Exit(1)
 	}
 
-	stdout.Success("\nPASS\n")
+	stdout.Success("\nPASS (%s)\n", time.Since(t))
 	return nil
 }
 

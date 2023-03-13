@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/assay-it/assay-it/internal/printer"
 	"github.com/spf13/cobra"
@@ -53,11 +54,11 @@ func root(cmd *cobra.Command, args []string) {
 // built over JSON protocol github.com/fogfish/gurl/v2/http.WriteOnce
 func stdoutTestResults(silent, verbose bool, data []byte) error {
 	type Status struct {
-		ID       string `json:"id"`
-		Status   string `json:"status"`
-		Duration string `json:"duration"`
-		Reason   string `json:"reason,omitempty"`
-		Payload  string `json:"payload"`
+		ID       string        `json:"id"`
+		Status   string        `json:"status"`
+		Duration time.Duration `json:"duration"`
+		Reason   string        `json:"reason,omitempty"`
+		Payload  string        `json:"payload"`
 	}
 
 	var suites []Status
@@ -80,16 +81,18 @@ func stdoutTestResults(silent, verbose bool, data []byte) error {
 
 	hasFailed := false
 	for pkg, seq := range suitesByPkg {
+		durPackage := time.Duration(0)
 		hasPackageFailed := false
 		for _, unit := range seq {
+			durPackage = durPackage + unit.Duration
 			if unit.Status == "success" {
 				if !silent {
-					stdout.Success("|-- PASS: %s (%s)\n", unit.ID, unit.Duration)
+					stdout.Success("==> PASS: %s (%s)\n", unit.ID, unit.Duration)
 				}
 			} else {
 				hasPackageFailed = true
-				stdout.Error("|-- FAIL: %s (%s)\n", unit.ID, unit.Duration)
-				stdout.Warning("|\t%s\n", unit.Reason)
+				stdout.Error("==> FAIL: %s (%s)\n", unit.ID, unit.Duration)
+				stdout.Warning("%s\n\n", unit.Reason)
 			}
 			if verbose {
 				stdout.FormattedJSON(unit.Payload)
@@ -97,10 +100,10 @@ func stdoutTestResults(silent, verbose bool, data []byte) error {
 		}
 
 		if hasPackageFailed {
-			stdout.Error("FAIL\t%s\n", pkg)
+			stdout.Error("FAIL\t%s (%s)\n", pkg, durPackage)
 			hasFailed = true
 		} else {
-			stdout.Success("PASS\t%s\n", pkg)
+			stdout.Success("PASS\t%s (%s)\n", pkg, durPackage)
 		}
 	}
 
