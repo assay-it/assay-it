@@ -15,13 +15,15 @@ import (
 
 type Module struct {
 	Name       string
+	Module     string
 	SourceCode string
 }
 
-func NewModule(root string, pkg string) (*Module, error) {
+func NewModule(pkgName, module, sourceCode string) (*Module, error) {
 	return &Module{
-		Name:       pkg,
-		SourceCode: root,
+		Name:       pkgName,
+		Module:     module,
+		SourceCode: sourceCode,
 	}, nil
 }
 
@@ -35,7 +37,7 @@ func (mod *Module) CopyFrom(file string) (*Suite, error) {
 }
 
 func (mod *Module) copyFromGo(file string) (*Suite, error) {
-	return NewSuite(file)
+	return NewSuite(mod.Module, file)
 }
 
 func (mod *Module) CreateRunner(tests []*Suite) error {

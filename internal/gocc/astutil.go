@@ -4,7 +4,6 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
-	"os"
 	"path/filepath"
 	"strings"
 	"unicode"
@@ -17,15 +16,7 @@ type Suite struct {
 	Units   []string
 }
 
-func NewSuite(file string) (*Suite, error) {
-	path, err := filepath.Abs(file)
-	if err != nil {
-		return nil, err
-	}
-
-	gopath := filepath.Join(os.Getenv("GOPATH"), "src") + string(filepath.Separator)
-	pkgpath := strings.TrimPrefix(filepath.Dir(path), gopath)
-
+func NewSuite(module, file string) (*Suite, error) {
 	fset := token.NewFileSet()
 	code, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 	if err != nil {
@@ -35,7 +26,7 @@ func NewSuite(file string) (*Suite, error) {
 	return &Suite{
 		File:    file,
 		Pkg:     code.Name.Name,
-		PkgPath: pkgpath,
+		PkgPath: filepath.Dir(filepath.Join(module, file)),
 		Units:   astLookupUnitTest(code),
 	}, nil
 }

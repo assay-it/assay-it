@@ -32,7 +32,7 @@ func NewTester(pkg string) (*Tester, error) {
 	}
 
 	// Config Package
-	mod, err := gocc.NewModule(box.Path, "main")
+	mod, err := gocc.NewModule("main", cfg.Module, box.Path)
 	if err != nil {
 		return nil, fmt.Errorf("unable to config module %s: %w", box.Path, err)
 	}
