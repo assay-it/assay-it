@@ -43,7 +43,7 @@ Confirm Quality and Eliminate Risk by Testing Microservices in Production.
 Runs testing of services across environment and deployments.
 	`,
 	Run:     root,
-	Version: "v1.1.0",
+	Version: "assay-it/v1.2.0 gurl/v2.5.0",
 }
 
 func root(cmd *cobra.Command, args []string) {
