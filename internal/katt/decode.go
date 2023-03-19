@@ -68,6 +68,7 @@ func (decoderIdle) parse(spec *katt, line string) error {
 }
 
 func (decoderIdle) flush(spec *katt, mod *http.Mod) error {
+	spec.state = decoderIdle{}
 	return nil
 }
 
@@ -91,6 +92,7 @@ func (decoderMethod) parse(spec *katt, line string) error {
 }
 
 func (decoderMethod) flush(spec *katt, mod *http.Mod) error {
+	spec.state = decoderIdle{}
 	return nil
 }
 
@@ -116,6 +118,7 @@ func (decoderRequestHeader) parse(spec *katt, line string) error {
 }
 
 func (decoderRequestHeader) flush(spec *katt, mod *http.Mod) error {
+	spec.state = decoderIdle{}
 	return nil
 }
 
@@ -138,6 +141,7 @@ func (decoderStatusCode) parse(spec *katt, line string) error {
 
 func (decoderStatusCode) flush(spec *katt, mod *http.Mod) error {
 	mod.Add(spec.unittest, spec.method(spec.expr))
+	spec.state = decoderIdle{}
 	return nil
 }
 
@@ -164,6 +168,7 @@ func (decoderResponseHeader) parse(spec *katt, line string) error {
 
 func (decoderResponseHeader) flush(spec *katt, mod *http.Mod) error {
 	mod.Add(spec.unittest, spec.method(spec.expr))
+	spec.state = decoderIdle{}
 	return nil
 }
 
@@ -187,6 +192,7 @@ func (c *decoderResponsePayload) parse(spec *katt, line string) error {
 }
 
 func (*decoderResponsePayload) flush(spec *katt, mod *http.Mod) error {
+	spec.state = decoderIdle{}
 	return nil
 }
 

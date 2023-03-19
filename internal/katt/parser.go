@@ -64,13 +64,13 @@ func parsableRequestHeader(spec string) bool {
 
 func parseRequestHeader(spec string) (ast.Expr, error) {
 	if !parsableRequestHeader(spec) {
-		return nil, fmt.Errorf("invalid header spec: %s", spec)
+		return nil, fmt.Errorf("invalid request header spec: %s", spec)
 	}
 
 	nowhitespace := strings.Trim(spec[2:], " ")
 	seq := strings.SplitN(nowhitespace, ": ", 2)
 	if len(seq) != 2 {
-		return nil, fmt.Errorf("invalid header spec: %s", spec)
+		return nil, fmt.Errorf("invalid request header spec: %s", spec)
 	}
 	expr := send.Header(seq[0], seq[1])
 
@@ -103,13 +103,13 @@ func parsableResponseHeader(spec string) bool {
 
 func parseResponseHeader(spec string) (ast.Expr, error) {
 	if !parsableResponseHeader(spec) {
-		return nil, fmt.Errorf("invalid header spec: %s", spec)
+		return nil, fmt.Errorf("invalid response header spec: %s", spec)
 	}
 
 	nowhitespace := strings.Trim(spec[2:], " ")
 	seq := strings.SplitN(nowhitespace, ": ", 2)
 	if len(seq) != 2 {
-		return nil, fmt.Errorf("invalid header spec: %s", spec)
+		return nil, fmt.Errorf("invalid response header spec: %s", spec)
 	}
 	expr := recv.Header(seq[0], seq[1])
 

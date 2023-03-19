@@ -89,7 +89,7 @@ Run the the quality assessment with `assay-it eval suite.go`. The utility automa
 ```bash
 assay-it eval suite.go
 
-|-- PASS: TestHttpBinGet (325.187959ms)
+==> PASS: TestHttpBinGet (325.187959ms)
 PASS	main
 ```
 
