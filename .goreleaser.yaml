@@ -27,9 +27,9 @@ changelog:
       - '^test:'
 
 brews:
-  - tap:
+  - repository:
       owner: assay-it
-      name: homebrew-tap
+      name: assay-it
     folder: Formula
     goarm: "7"
     homepage:  https://assay.it
