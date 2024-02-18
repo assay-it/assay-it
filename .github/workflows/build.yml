@@ -46,3 +46,10 @@ jobs:
           git tag ${{ steps.version.outputs.v-version }}
           git push origin -u ${{ steps.version.outputs.v-version }}
 
+      - uses: goreleaser/goreleaser-action@v5
+        with:
+          distribution: goreleaser
+          version: ${{ steps.version.outputs.v-version }}
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
