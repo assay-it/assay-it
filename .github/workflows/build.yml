@@ -50,6 +50,6 @@ jobs:
         with:
           distribution: goreleaser
           version: ${{ steps.version.outputs.v-version }}
-          args: release --clean
+          args: release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
