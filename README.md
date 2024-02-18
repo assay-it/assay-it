@@ -52,6 +52,8 @@ Easiest way to install the latest version of utility using `brew` but binaries a
 ```bash 
 brew tap assay-it/assay-it https://github.com/assay-it/assay-it
 brew install -q assay-it
+
+## use `brew upgrade` to install latest version 
 ```
 
 ### Code It
