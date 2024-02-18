@@ -50,7 +50,7 @@ Easiest way to install the latest version of utility using `brew` but binaries a
 
 
 ```bash 
-brew tap assay-it/homebrew-tap
+brew tap assay-it/assay-it https://github.com/assay-it/assay-it
 brew install -q assay-it
 ```
 
