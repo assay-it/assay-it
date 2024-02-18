@@ -17,11 +17,13 @@ jobs:
           go-version: "1.21"
 
       - uses: actions/checkout@v4.1.1
+        with:
+          ref: ${{ github.event.ref }}
 
       - uses: goreleaser/goreleaser-action@v5
         with:
           distribution: goreleaser
-          version: ${{ github.event.release.name }}
+          version: ${{ github.event.ref }}
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
